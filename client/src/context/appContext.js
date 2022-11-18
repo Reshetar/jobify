@@ -19,11 +19,16 @@ import {
   GET_JOBS_BEGIN,
   GET_JOBS_SUCCESS,
   SET_EDIT_JOB,
+  DELETE_JOB_BEGIN,
+  EDIT_JOB_BEGIN,
+  EDIT_JOB_SUCCESS,
+  EDIT_JOB_ERROR,
   SHOW_STATS_BEGIN,
   SHOW_STATS_SUCCESS,
+  CLEAR_FILTERS,
+  CHANGE_PAGE,
 } from "./actions";
 import reducer from "./reducers";
-
 
 const token = localStorage.getItem("token");
 const user = localStorage.getItem("user");
@@ -53,6 +58,11 @@ const initialState = {
   page: 1,
   stats: {},
   monthlyApplications: [],
+  search: "",
+  searchStatus: "all",
+  searchType: "all",
+  sort: "latest",
+  sortOptions: ["latest", "oldest", "a-z", "z-a"],
 };
 
 const AppContext = React.createContext();
@@ -195,7 +205,12 @@ const AppProvider = ({ children }) => {
   };
 
   const getJobs = async () => {
-    let url = `/jobs`;
+    const { page, search, searchStatus, searchType, sort } = state;
+
+    let url = `/jobs?page=${page}&status=${searchStatus}&jobType=${searchType}&sort=${sort}`;
+    if (search) {
+      url = url + `&search=${search}`;
+    }
 
     dispatch({ type: GET_JOBS_BEGIN });
     try {
@@ -211,8 +226,7 @@ const AppProvider = ({ children }) => {
         },
       });
     } catch (error) {
-      console.log(error.response);
-      // logoutUser();
+      logoutUser();
     }
     clearAlert();
   };
@@ -221,12 +235,38 @@ const AppProvider = ({ children }) => {
     dispatch({ type: SET_EDIT_JOB, payload: { id } });
   };
 
-  const editJob = () => {
-    console.log("edit job");
+  const editJob = async () => {
+    dispatch({ type: EDIT_JOB_BEGIN });
+
+    try {
+      const { position, company, jobLocation, jobType, status } = state;
+      await authFetch.patch(`/jobs/${state.editJobId}`, {
+        company,
+        position,
+        jobLocation,
+        jobType,
+        status,
+      });
+      dispatch({ type: EDIT_JOB_SUCCESS });
+      dispatch({ type: CLEAR_VALUE });
+    } catch (error) {
+      if (error.response.status === 401) return;
+      dispatch({
+        type: EDIT_JOB_ERROR,
+        payload: { msg: error.response.data.msg },
+      });
+    }
+    clearAlert();
   };
 
-  const deleteJob = (id) => {
-    console.log(`delete job: ${id}`);
+  const deleteJob = async (jobId) => {
+    dispatch({ type: DELETE_JOB_BEGIN });
+    try {
+      await authFetch.delete(`/jobs/${jobId}`);
+      getJobs();
+    } catch (error) {
+      logoutUser();
+    }
   };
 
   const showStats = async () => {
@@ -241,10 +281,17 @@ const AppProvider = ({ children }) => {
         },
       });
     } catch (error) {
-      // logoutUser();
-      console.log(error.response);
+      logoutUser();
     }
     clearAlert();
+  };
+
+  const clearFilters = () => {
+    dispatch({ type: CLEAR_FILTERS });
+  };
+
+  const changePage = (page) => {
+    dispatch({ type: CHANGE_PAGE, payload: { page } });
   };
 
   return (
@@ -264,6 +311,8 @@ const AppProvider = ({ children }) => {
         deleteJob,
         editJob,
         showStats,
+        clearFilters,
+        changePage,
       }}
     >
       {children}

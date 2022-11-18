@@ -18,8 +18,14 @@ import {
   GET_JOBS_BEGIN,
   GET_JOBS_SUCCESS,
   SET_EDIT_JOB,
+  DELETE_JOB_BEGIN,
+  EDIT_JOB_BEGIN,
+  EDIT_JOB_SUCCESS,
+  EDIT_JOB_ERROR,
   SHOW_STATS_BEGIN,
   SHOW_STATS_SUCCESS,
+  CLEAR_FILTERS,
+  CHANGE_PAGE,
 } from "./actions";
 
 import { initialState } from "./appContext";
@@ -114,6 +120,7 @@ const reducer = (state, action) => {
   if (action.type === HANDLE_CHANGE) {
     return {
       ...state,
+      page: 1,
       [action.payload.name]: action.payload.value,
     };
   }
@@ -192,12 +199,41 @@ const reducer = (state, action) => {
     };
   }
 
+  if (action.type === DELETE_JOB_BEGIN) {
+    return {
+      ...state,
+      isLoading: true,
+    };
+  }
+
+  if (action.type === EDIT_JOB_BEGIN) {
+    return { ...state, isLoading: true };
+  }
+  if (action.type === EDIT_JOB_SUCCESS) {
+    return {
+      ...state,
+      isLoading: false,
+      showAlert: true,
+      alertType: "success",
+      alertText: 'Job Updated!',
+    };
+  }
+  if (action.type === EDIT_JOB_ERROR) {
+    return {
+      ...state,
+      isLoading: false,
+      showAlert: true,
+      alertType: "danger",
+      alertText: action.payload.msg,
+    };
+  }
+
   if (action.type === SHOW_STATS_BEGIN) {
     return {
       ...state,
       isLoading: true,
       showAlert: false,
-    }
+    };
   }
   if (action.type === SHOW_STATS_SUCCESS) {
     return {
@@ -205,7 +241,24 @@ const reducer = (state, action) => {
       isLoading: false,
       stats: action.payload.stats,
       monthlyApplications: action.payload.monthlyApplications,
-    }
+    };
+  }
+
+  if (action.type === CLEAR_FILTERS) {
+    return {
+      ...state,
+      search: "",
+      searchStatus: "all",
+      searchType: "all",
+      sort: "latest",
+    };
+  }
+
+  if (action.type === CHANGE_PAGE) {
+    return {
+      ...state,
+      page: action.payload.page,
+    };
   }
 
   throw new Error(`no such action : ${action.type}`);
