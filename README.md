@@ -1,8 +1,9 @@
 # Jobify
-
 Full Stack Application with MongoDB, Express, React and NodeJS
 
-Link on the website:
+Link on the website: https://yobify.onrender.com/
+Email: yevhen20@gmail.com
+Password: yevhen20@gmail.com
 
 I did:
 - Connect Front-End application (React) with Backend application (Express, MongoDB, NodeJS)
