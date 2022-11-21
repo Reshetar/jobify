@@ -1,4 +1,3 @@
-import { TOO_MANY_REQUESTS } from "http-status-codes";
 import {
   CLEAR_ALERT,
   DISPLAY_ALERT,
